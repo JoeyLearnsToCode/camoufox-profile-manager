@@ -1,48 +1,16 @@
 import os
 import sys
 import subprocess
-import importlib.util
+import threading
+import time
+import webbrowser
 from pathlib import Path
-from shutil import which
 
-REQUIREMENTS = ["PyQt5", "camoufox[geoip]"]
+HERE = Path(__file__).resolve().parent
 
-HERE = Path(__file__).resolve().parent       # directory containing install.py
-# Candidate entry files for your app (first one found is used)
-ENTRY_CANDIDATES = [
-    "main_window.py",
-]
-
-def run(cmd, cwd=None):
-    print(f"[~] Running: {' '.join(map(str, cmd))}")
-    subprocess.check_call(cmd, cwd=str(cwd) if cwd else None)
-
-def pip_install(pkg):
-    run([sys.executable, "-m", "pip", "install", pkg], cwd=HERE)
-
-def check_and_install():
-    try:
-        import pip  # noqa
-    except ImportError:
-        print("[x] pip is not installed. Please install pip and re-run.")
-        sys.exit(1)
-
-    for spec in REQUIREMENTS:
-        base = spec.split("[", 1)[0]
-        if importlib.util.find_spec(base) is None:
-            print(f"[!] Missing {spec}, installing…")
-            pip_install(spec)
-        else:
-            print(f"[✓] {base} already installed")
 
 def ensure_camoufox_browser():
-    try:
-        from camoufox.sync_api import Camoufox  # noqa
-        print("[✓] camoufox already installed")
-    except ImportError:
-        print("[!] Installing camoufox…")
-        pip_install("camoufox[geoip]")
-
+    """Ensure Camoufox browser binary is downloaded."""
     # Try to locate the browser binary
     try:
         out = subprocess.check_output(
@@ -74,32 +42,77 @@ def ensure_camoufox_browser():
         return
 
     print("[!] Camoufox browser binary not found. Fetching…")
-    run([sys.executable, "-m", "camoufox", "fetch"], cwd=HERE)
+    subprocess.check_call(
+        [sys.executable, "-m", "camoufox", "fetch"],
+        cwd=str(HERE)
+    )
 
-def find_entry_file() -> Path:
-    for name in ENTRY_CANDIDATES:
-        candidate = HERE / name
-        if candidate.exists():
-            return candidate
-    print("[x] Could not find an entry file. Expected one of:")
-    for n in ENTRY_CANDIDATES:
-        print(f"    - {n} (in {HERE})")
-    sys.exit(2)
+
+def wait_for_server(url: str, timeout: int = 10) -> bool:
+    """Wait for Flask server to be ready."""
+    import urllib.request
+    import urllib.error
+    
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            urllib.request.urlopen(url, timeout=1)
+            return True
+        except urllib.error.URLError:
+            time.sleep(0.5)
+    return False
+
+
+def launch_flask_server():
+    """Start Flask server in background thread."""
+    # Change to backend directory and start Flask
+    backend_dir = HERE / "backend"
+    
+    def run_flask():
+        os.chdir(str(backend_dir))
+        # Import and run Flask app
+        sys.path.insert(0, str(backend_dir))
+        from app import app
+        app.run(host='localhost', port=5000, debug=False, use_reloader=False)
+    
+    server_thread = threading.Thread(target=run_flask, daemon=True)
+    server_thread.start()
+    print("[✓] Flask server starting...")
+
+
+def open_browser(url: str):
+    """Open default browser to the application URL."""
+    webbrowser.open(url)
+    print(f"[✓] Opened browser at {url}")
+
 
 def main():
-    check_and_install()
+    print("[✓] Starting Camoufox Manager…\n")
+    
     ensure_camoufox_browser()
-
-    entry = find_entry_file()
-    print("\n[✓] Environment ready. Launching Camoufox Manager…\n")
-    try:
-        # Ensure we run from the project root so relative assets (.ui/.qss) resolve
-        run([sys.executable, str(entry.name)], cwd=HERE)
-    except subprocess.CalledProcessError as e:
-        print("\n[x] Failed to launch the app.")
-        print(f"    Command: {' '.join(map(str, e.cmd))}")
-        print(f"    Exit code: {e.returncode}")
-        sys.exit(e.returncode)
+    
+    print("\n[✓] Environment ready. Launching application…\n")
+    
+    # Start Flask server
+    launch_flask_server()
+    
+    # Wait for server to be ready
+    url = 'http://localhost:5000'
+    if wait_for_server(url):
+        # Open browser
+        open_browser(url)
+        print("\n[✓] Application running. Press Ctrl+C to stop.\n")
+        
+        # Keep main thread alive
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n[✓] Shutting down...")
+            sys.exit(0)
+    else:
+        print("[!] Server failed to start within timeout")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

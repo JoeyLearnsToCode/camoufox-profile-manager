@@ -1,0 +1,94 @@
+/* Custom dark theme styles for Camoufox Profile Manager */
+/* Color values extracted from original dark.qss */
+
+:root {
+    /* Original Qt5 colors from dark.qss */
+    --dark-bg: #1a1a1a;
+    --dark-surface: #2d2d2d;
+    --dark-hover: #3a3a3a;
+    --accent: #4c6ef5;
+    --accent-hover: #3b5bdb;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+    transition-property: background-color, border-color, color, opacity;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--dark-surface);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-hover);
+}
+
+/* Profile list item styling */
+.profile-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+}
+
+.profile-item:hover {
+    background-color: var(--dark-hover);
+}
+
+.profile-item.selected {
+    background-color: var(--dark-hover);
+    border-left-color: var(--accent);
+}
+
+/* Button disabled state */
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Input focus styling */
+input:focus {
+    outline: none;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1);
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #666;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Status message colors */
+.status-success {
+    color: #10b981;
+}
+
+.status-error {
+    color: #ef4444;
+}
+
+.status-info {
+    color: #60a5fa;
+}
