@@ -1,5 +1,4 @@
 """Flask backend application for Camoufox Profile Manager."""
-import os
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from storage import load_profiles, save_profiles, find_profile, update_profile, delete_profile
@@ -99,7 +98,8 @@ def get_session():
     """Get current session status."""
     session = session_manager.get_session()
     if session is None:
-        return jsonify({"error": "Not Found", "message": "No active session"}), 404
+        # Return null instead of 404 to avoid console errors
+        return jsonify(None), 200
     return jsonify(session)
 
 
@@ -108,6 +108,8 @@ def start_session():
     """Start a browser session."""
     data = request.get_json()
     profile_name = data.get('profile_name')
+    screen_width = data.get('screen_width')
+    screen_height = data.get('screen_height')
     
     if not profile_name:
         return jsonify({"error": "Validation failed", "message": "profile_name is required"}), 400
@@ -117,9 +119,9 @@ def start_session():
     if not profile:
         return jsonify({"error": "Not Found", "message": f"Profile '{profile_name}' not found"}), 404
     
-    # Start session
+    # Start session with optional screen dimensions
     try:
-        session = session_manager.start_session(profile)
+        session = session_manager.start_session(profile, screen_width, screen_height)
         return jsonify(session), 201
     except RuntimeError as e:
         return jsonify({"error": "Conflict", "message": str(e)}), 409

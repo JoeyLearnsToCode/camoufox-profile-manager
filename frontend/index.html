@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +17,7 @@
                         'dark-surface': '#2d2d2d',
                         'dark-hover': '#3a3a3a',
                         'accent': '#4c6ef5',
-                        'accent-hover': '#3b5bdb'
+                'accent-hover': '#3b5bdb'
                     }
                 }
             }
@@ -26,24 +26,24 @@
     
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark bg-dark-bg text-gray-200 h-screen overflow-hidden">
+<body class="h-screen overflow-hidden" style="background-color: var(--bg); color: var(--text-primary);">
     <div class="flex h-full">
         <!-- Left Sidebar: Profile List -->
-        <div class="w-64 bg-dark-surface border-r border-gray-700 flex flex-col">
-            <div class="p-4 border-b border-gray-700">
-                <h1 class="text-xl font-bold text-white">Camoufox Profiles</h1>
+        <div class="w-64 flex flex-col" style="background-color: var(--surface); border-right: 1px solid var(--border);">
+            <div class="p-4" style="border-bottom: 1px solid var(--border);">
+                <h1 class="text-xl font-bold" style="color: var(--text-primary);" data-i18n="Camoufox 配置文件">Camoufox 配置文件</h1>
             </div>
             
             <div class="flex-1 overflow-y-auto" id="profileList">
                 <!-- Profile list items will be rendered here -->
             </div>
             
-            <div class="p-4 border-t border-gray-700 flex gap-2">
-                <button id="newProfileBtn" class="flex-1 bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition-all duration-200">
-                    New Profile
+            <div class="p-4 flex gap-2" style="border-top: 1px solid var(--border);">
+                <button id="newProfileBtn" class="flex-1 px-4 py-2 rounded text-white" style="background-color: var(--accent);" data-i18n="新建配置">
+                    新建配置
                 </button>
-                <button id="deleteProfileBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-all duration-200">
-                    Delete
+                <button id="deleteProfileBtn" class="px-4 py-2 rounded text-white" style="background-color: #dc2626;" data-i18n="删除">
+                    删除
                 </button>
             </div>
         </div>
@@ -56,21 +56,21 @@
                     <div class="space-y-6">
                         <!-- Name -->
                         <div>
-                            <label class="block text-sm font-medium mb-2">Name</label>
-                            <input type="text" id="profileName" class="w-full bg-dark-surface border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-accent" placeholder="Profile name">
+                            <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);" data-i18n="名称">名称</label>
+                            <input type="text" id="profileName" class="w-full rounded px-4 py-2 input-field" placeholder="Profile name">
                         </div>
                         
                         <!-- Viewport -->
                         <div>
-                            <label class="block text-sm font-medium mb-2">Viewport</label>
+                            <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);" data-i18n="视窗">视窗</label>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Width</label>
-                                    <input type="number" id="viewportWidth" min="320" max="10000" class="w-full bg-dark-surface border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-accent">
+                                    <label class="block text-xs mb-1" style="color: var(--text-secondary);" data-i18n="宽度">宽度</label>
+                                    <input type="number" id="viewportWidth" min="320" max="10000" class="w-full rounded px-4 py-2 input-field">
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Height</label>
-                                    <input type="number" id="viewportHeight" min="320" max="10000" class="w-full bg-dark-surface border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-accent">
+                                    <label class="block text-xs mb-1" style="color: var(--text-secondary);" data-i18n="高度">高度</label>
+                                    <input type="number" id="viewportHeight" min="320" max="10000" class="w-full rounded px-4 py-2 input-field">
                                 </div>
                             </div>
                         </div>
@@ -79,67 +79,102 @@
                         <div>
                             <label class="flex items-center cursor-pointer">
                                 <input type="checkbox" id="fullscreen" class="mr-2">
-                                <span class="text-sm">Launch in fullscreen</span>
+                                <span class="text-sm" data-i18n="全屏启动">全屏启动</span>
                             </label>
                         </div>
                         
                         <!-- Proxy Configuration -->
-                        <div class="border border-gray-600 rounded p-4">
-                            <h3 class="text-sm font-medium mb-3">Proxy (optional)</h3>
+                        <div class="rounded p-4" style="border: 1px solid var(--border);">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-medium" style="color: var(--text-primary);" data-i18n="代理（可选）">代理（可选）</h3>
+                            </div>
+                            <!-- Enable Proxy Checkbox -->
+                            <div class="mb-3">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="proxyEnabled" class="mr-2">
+                                    <span class="text-sm" style="color: var(--text-primary);" data-i18n="启用代理">启用代理</span>
+                                </label>
+                            </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Host</label>
-                                    <input type="text" id="proxyHost" class="w-full bg-dark-surface border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-accent" placeholder="127.0.0.1">
+                                    <label class="block text-xs mb-1" style="color: var(--text-secondary);" data-i18n="协议">协议</label>
+                                    <select id="proxyProtocol" class="w-full rounded px-4 py-2 input-field">
+                                        <option value="socks5">SOCKS5</option>
+                                        <option value="http">HTTP</option>
+                                        <option value="https">HTTPS</option>
+                                    </select>
+                                </div>
+                                <div></div>
+                                <div>
+                                    <label class="block text-xs mb-1" style="color: var(--text-secondary);" data-i18n="主机">主机</label>
+                                    <input type="text" id="proxyHost" class="w-full rounded px-4 py-2 input-field" placeholder="127.0.0.1">
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Port</label>
-                                    <input type="number" id="proxyPort" min="1" max="65535" class="w-full bg-dark-surface border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-accent">
+                                    <label class="block text-xs mb-1" style="color: var(--text-secondary);" data-i18n="端口">端口</label>
+                                    <input type="number" id="proxyPort" min="1" max="65535" class="w-full rounded px-4 py-2 input-field" placeholder="7888">
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Username</label>
-                                    <input type="text" id="proxyUsername" class="w-full bg-dark-surface border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-accent">
+                                    <label class="block text-xs mb-1" style="color: var(--text-secondary);" data-i18n="用户名">用户名</label>
+                                    <input type="text" id="proxyUsername" class="w-full rounded px-4 py-2 input-field">
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Password</label>
-                                    <input type="password" id="proxyPassword" class="w-full bg-dark-surface border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-accent">
+                                    <label class="block text-xs mb-1" style="color: var(--text-secondary);" data-i18n="密码">密码</label>
+                                    <input type="password" id="proxyPassword" class="w-full rounded px-4 py-2 input-field">
                                 </div>
                             </div>
                             <div class="mt-3">
                                 <label class="flex items-center cursor-pointer">
                                     <input type="checkbox" id="useGeoip" class="mr-2">
-                                    <span class="text-sm">Use GeoIP with Proxy</span>
+                                    <span class="text-sm" style="color: var(--text-primary);" data-i18n="使用 GeoIP">使用 GeoIP</span>
                                 </label>
                             </div>
                         </div>
                         
                         <!-- Storage Directory -->
                         <div>
-                            <label class="block text-sm font-medium mb-2">Storage Directory</label>
-                            <input type="text" id="persistentDir" class="w-full bg-dark-surface border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-accent" placeholder="C:\ProfileName">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium" style="color: var(--text-primary);" data-i18n="存储目录">存储目录</label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="storageEnabled" class="mr-2">
+                                    <span class="text-sm" style="color: var(--text-primary);" data-i18n="启用持久化存储">启用持久化存储</span>
+                                </label>
+                            </div>
+                            <input type="text" id="persistentDir" class="w-full rounded px-4 py-2 input-field">
                         </div>
                     </div>
                 </div>
             </div>
             
             <!-- Action Buttons -->
-            <div class="border-t border-gray-700 p-4 flex justify-between items-center">
-                <button id="saveBtn" class="bg-accent hover:bg-accent-hover text-white px-6 py-2 rounded transition-all duration-200">
-                    Save Changes
+            <div class="p-4 flex justify-between items-center" style="border-top: 1px solid var(--border);">
+                <button id="saveBtn" class="px-6 py-2 rounded text-white" style="background-color: var(--accent);" data-i18n="保存更改">
+                    保存更改
                 </button>
                 
                 <div class="flex gap-3">
-                    <button id="launchBtn" class="bg-accent hover:bg-accent-hover text-white px-6 py-2 rounded transition-all duration-200">
-                        Launch Session
+                    <button id="launchBtn" class="px-6 py-2 rounded text-white" style="background-color: var(--accent);" data-i18n="启动会话">
+                        启动会话
                     </button>
-                    <button id="stopBtn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded transition-all duration-200" disabled>
-                        Stop Session
+                    <button id="stopBtn" class="px-6 py-2 rounded text-white" style="background-color: #dc2626;" data-i18n="停止会话" disabled>
+                        停止会话
                     </button>
                 </div>
             </div>
             
             <!-- Status Bar -->
-            <div class="bg-dark-surface border-t border-gray-700 px-4 py-2 text-sm">
-                <span id="statusMessage" class="text-gray-400">Ready</span>
+            <div class="px-4 py-2 text-sm flex items-center justify-between" style="background-color: var(--surface); border-top: 1px solid var(--border);">
+                <!-- Left: Control buttons -->
+                <div class="flex gap-3">
+                    <button id="themeToggle" class="hover-btn" title="Toggle Theme">
+                        🌞
+                    </button>
+                    <button id="langToggle" class="hover-btn font-bold" title="Toggle Language">
+                        中
+                    </button>
+                </div>
+                
+                <!-- Right: Status message -->
+                <span id="statusMessage" style="color: var(--text-secondary);" data-i18n="就绪">就绪</span>
             </div>
         </div>
     </div>

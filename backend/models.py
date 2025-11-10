@@ -6,20 +6,22 @@ from typing import Dict, Any, Optional
 @dataclass
 class ProxyConfig:
     """Proxy server configuration."""
-    host: str = ""
-    port: int = 0
+    host: str = "127.0.0.1"
+    port: int = 7888
     username: str = ""
     password: str = ""
+    protocol: str = "socks5"
+    enabled: bool = False
 
     def to_proxy_dict(self) -> Optional[Dict[str, Any]]:
         """
         Convert ProxyConfig to Camoufox library format.
-        Returns None if proxy is not configured.
+        Returns None if proxy is not enabled or not configured.
         """
-        if not self.host or not self.port:
+        if not self.enabled or not self.host or not self.port:
             return None
         
-        result = {"server": f"http://{self.host}:{self.port}"}
+        result = {"server": f"{self.protocol}://{self.host}:{self.port}"}
         
         if self.username:
             result["username"] = self.username
@@ -60,10 +62,23 @@ class Profile:
         
         name = d.get("name", "Profile")
         
-        # Default storage to C:\<ProfileName> if empty
         persistent_dir = d.get("persistent_dir", "")
         if not persistent_dir:
-            persistent_dir = f"C:\\{name}"
+            persistent_dir = f"D:\\Data\\{name}"
+        
+        # Backward compatibility: add default protocol if missing
+        if "protocol" not in raw_proxy:
+            raw_proxy["protocol"] = "socks5"
+        
+        # Backward compatibility: infer enabled from host/port if missing
+        if "enabled" not in raw_proxy:
+            raw_proxy["enabled"] = bool(raw_proxy.get("host") and raw_proxy.get("port"))
+        
+        # Default values for host/port if empty
+        if not raw_proxy.get("host"):
+            raw_proxy["host"] = "127.0.0.1"
+        if not raw_proxy.get("port"):
+            raw_proxy["port"] = 7888
         
         return Profile(
             name=name,
@@ -73,9 +88,11 @@ class Profile:
             persistent_dir=persistent_dir,
             use_geoip=bool(d.get("use_geoip", False)),
             proxy=ProxyConfig(
-                host=raw_proxy.get("host", ""),
-                port=int(raw_proxy.get("port", 0) or 0),
+                host=raw_proxy.get("host", "127.0.0.1"),
+                port=int(raw_proxy.get("port", 7888) or 7888),
                 username=raw_proxy.get("username", ""),
                 password=raw_proxy.get("password", ""),
+                protocol=raw_proxy.get("protocol", "socks5"),
+                enabled=bool(raw_proxy.get("enabled", False)),
             ),
         )

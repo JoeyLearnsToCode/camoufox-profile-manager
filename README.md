@@ -10,7 +10,7 @@ A **modern web-based application** for managing multiple [Camoufox](https://pypi
 ## ✨ Features
 
 - Manage unlimited browser profiles
-- Persistent storage directory per profile (`C:\ProfileName` by default)
+- Persistent storage directory per profile
 - Configure viewport size, fullscreen toggle
 - Proxy support (host, port, user, password)
 - GeoIP auto-matching with proxies

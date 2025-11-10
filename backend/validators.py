@@ -36,7 +36,7 @@ def validate_profile(profile: Dict[str, Any]) -> Tuple[bool, str]:
     
     # Storage directory validation
     storage = profile.get('persistent_dir', '').strip()
-    if not storage:
+    if profile.get('storage_enabled', False) and not storage:
         return False, "Persistent storage directory cannot be empty"
     
     # GeoIP validation
@@ -65,9 +65,20 @@ def validate_proxy(proxy: Dict[str, Any]) -> Tuple[bool, str]:
     """
     host = proxy.get('host', '').strip()
     port = proxy.get('port', 0)
+    protocol = proxy.get('protocol', 'socks5')
+    enabled = proxy.get('enabled', False)
     
-    # If host is empty, proxy is disabled (valid state)
-    if not host:
+    # Protocol validation
+    if protocol not in ['socks5', 'http', 'https']:
+        return False, "Protocol must be socks5, http, or https"
+    
+    # If proxy is enabled, host and port are required
+    if enabled:
+        if not host or not port:
+            return False, "Host and port required when proxy is enabled"
+    
+    # If host is empty and not enabled, proxy is disabled (valid state)
+    if not host and not enabled:
         return True, ""
     
     # Host validation (basic format check)
