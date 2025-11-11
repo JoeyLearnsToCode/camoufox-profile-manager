@@ -30,10 +30,12 @@ git clone https://github.com/yourusername/camoufox-profile-manager.git
 cd camoufox-profile-manager
 ```
 
-Install & run with the helper script:
+Install & run:
 
 ```bash
-python run.py
+uv venv
+uv pip install -r requirements.txt
+uv run run.py
 ```
 
 This will:
