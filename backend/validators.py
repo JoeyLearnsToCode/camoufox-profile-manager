@@ -1,5 +1,14 @@
 """Profile data validation logic."""
+import re
 from typing import Dict, Any, Tuple
+
+# 各操作系统不允许在文件名中使用的字符
+# Windows: < > : " / \ | ? *
+# Unix/Linux: /
+# macOS: / :
+# 综合所有系统的限制
+INVALID_FILENAME_CHARS = r'[<>:"/\\|?*]'
+INVALID_FILENAME_PATTERN = re.compile(INVALID_FILENAME_CHARS)
 
 
 def validate_profile(profile: Dict[str, Any]) -> Tuple[bool, str]:
@@ -19,6 +28,23 @@ def validate_profile(profile: Dict[str, Any]) -> Tuple[bool, str]:
     
     if len(name) > 100:
         return False, "Profile name must be 100 characters or less"
+    
+    # 检查文件名非法字符
+    if INVALID_FILENAME_PATTERN.search(name):
+        return False, 'Profile name cannot contain: < > : " / \\ | ? *'
+    
+    # 检查保留名称（Windows）
+    reserved_names = [
+        'CON', 'PRN', 'AUX', 'NUL',
+        'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+        'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+    ]
+    if name.upper() in reserved_names:
+        return False, f"Profile name '{name}' is a reserved system name"
+    
+    # 检查开头/结尾的空格或点号（Windows 限制）
+    if name != name.strip() or name.endswith('.'):
+        return False, "Profile name cannot start/end with spaces or end with a dot"
     
     # Viewport validation
     width = profile.get('viewport_width', 0)

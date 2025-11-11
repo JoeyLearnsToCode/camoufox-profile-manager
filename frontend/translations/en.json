@@ -37,5 +37,8 @@
     "保存失败": "Failed to save profile",
     "删除失败": "Failed to delete profile",
     "启动失败": "Failed to start session",
-    "停止失败": "Failed to stop session"
+    "停止失败": "Failed to stop session",
+    "个会话运行中": "session(s) running",
+    "运行中": "Running",
+    "该配置文件没有运行的会话": "No active session for this profile"
 }

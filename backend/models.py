@@ -59,27 +59,27 @@ class Profile:
         raw_proxy = d.get("proxy", {})
         if not isinstance(raw_proxy, dict):
             raw_proxy = {}
-        
+
         name = d.get("name", "Profile")
-        
+
         persistent_dir = d.get("persistent_dir", "")
         if not persistent_dir:
-            persistent_dir = f"D:\\Data\\{name}"
-        
+            persistent_dir = f"D:\\Data\\Camoufox Profile {name}"
+
         # Backward compatibility: add default protocol if missing
         if "protocol" not in raw_proxy:
             raw_proxy["protocol"] = "socks5"
-        
+
         # Backward compatibility: infer enabled from host/port if missing
         if "enabled" not in raw_proxy:
             raw_proxy["enabled"] = bool(raw_proxy.get("host") and raw_proxy.get("port"))
-        
+
         # Default values for host/port if empty
         if not raw_proxy.get("host"):
             raw_proxy["host"] = "127.0.0.1"
         if not raw_proxy.get("port"):
             raw_proxy["port"] = 7888
-        
+
         return Profile(
             name=name,
             viewport_width=int(d.get("viewport_width", 1280)),

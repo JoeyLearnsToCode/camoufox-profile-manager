@@ -8,7 +8,7 @@ let currentLang = 'zh';
 const state = {
     profiles: [],
     selectedProfile: null,
-    session: null,
+    sessions: [],  // 多会话支持：数组存储所有活跃会话
     loading: false
 };
 
@@ -119,6 +119,7 @@ function render() {
     renderProfileList();
     renderProfileDetail();
     updateButtonStates();
+    updateStatusMessage();  // 更新状态栏显示会话数量
 }
 
 // API calls
@@ -146,7 +147,7 @@ async function createProfile() {
         viewport_width: 1280,
         viewport_height: 800,
         fullscreen: false,
-        persistent_dir: `D:\\Data\\Profile ${profileCount}`,
+        persistent_dir: `D:\\Data\\Camoufox Profile ${profileCount}`,
         storage_enabled: true,
         use_geoip: false,
         proxy: {
@@ -252,6 +253,24 @@ async function deleteProfile() {
     }
 }
 
+// ========== 辅助函数：多会话支持 ==========
+
+/**
+ * 获取指定 profile 的会话（当前阶段返回第一个匹配）
+ */
+function getProfileSession(profileName) {
+    return state.sessions.find(s => s.profile_name === profileName);
+}
+
+/**
+ * 检查 profile 是否有活跃会话
+ */
+function hasActiveSession(profileName) {
+    return state.sessions.some(s => s.profile_name === profileName);
+}
+
+// ========== API 调用函数 ==========
+
 async function launchSession() {
     if (!state.selectedProfile) {
         showStatus(t('未选择配置文件'), 'error');
@@ -280,8 +299,10 @@ async function launchSession() {
             throw new Error(error.message || t('启动失败'));
         }
         
-        const session = await res.json();
-        updateState({ session });
+        const session = await res.json();  // 包含 session_id
+        // 添加新会话到 sessions 数组
+        const newSessions = [...state.sessions, session];
+        updateState({ sessions: newSessions });
         showStatus(`${t('会话已启动')}: ${state.selectedProfile.name}`, 'success');
     } catch (error) {
         showStatus(`${t('错误')}: ${error.message}`, 'error');
@@ -289,9 +310,23 @@ async function launchSession() {
 }
 
 async function stopSession() {
+    if (!state.selectedProfile) {
+        showStatus(t('未选择配置文件'), 'error');
+        return;
+    }
+    
+    // 获取当前 profile 的会话
+    const session = getProfileSession(state.selectedProfile.name);
+    if (!session) {
+        showStatus(t('该配置文件没有运行的会话'), 'error');
+        return;
+    }
+    
     try {
         const res = await fetch(`${API_BASE}/session`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: session.session_id })
         });
         
         if (!res.ok && res.status !== 404) {
@@ -299,7 +334,9 @@ async function stopSession() {
             throw new Error(error.message || t('停止失败'));
         }
         
-        updateState({ session: null });
+        // 从 sessions 数组中移除该会话
+        const newSessions = state.sessions.filter(s => s.session_id !== session.session_id);
+        updateState({ sessions: newSessions });
         showStatus(t('会话已停止'), 'info');
     } catch (error) {
         showStatus(`${t('错误')}: ${error.message}`, 'error');
@@ -311,15 +348,23 @@ async function checkSessionStatus() {
         const res = await fetch(`${API_BASE}/session`);
         
         if (res.ok) {
-            const session = await res.json();
-            // Check if session is null (no active session)
-            if (session === null) {
-                if (state.session) {
-                    updateState({ session: null });
-                    showStatus(t('会话已结束'), 'info');
+            const sessions = await res.json();  // 现在是数组
+            // 检查是否有变化
+            if (JSON.stringify(sessions) !== JSON.stringify(state.sessions)) {
+                // 检测会话终止
+                const oldSessionIds = new Set(state.sessions.map(s => s.session_id));
+                const newSessionIds = new Set(sessions.map(s => s.session_id));
+                
+                const terminatedSessions = state.sessions.filter(s => !newSessionIds.has(s.session_id));
+                
+                updateState({ sessions });
+                
+                // 显示会话终止通知
+                if (terminatedSessions.length > 0) {
+                    terminatedSessions.forEach(s => {
+                        showStatus(`${t('会话已结束')}: ${s.profile_name}`, 'info');
+                    });
                 }
-            } else if (!state.session) {
-                updateState({ session });
             }
         }
     } catch (error) {
@@ -337,7 +382,21 @@ function renderProfileList() {
         if (state.selectedProfile && profile.name === state.selectedProfile.name) {
             item.classList.add('selected');
         }
-        item.textContent = profile.name;
+        
+        // 显示 profile 名称
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = profile.name;
+        item.appendChild(nameSpan);
+        
+        // 添加会话状态指示器
+        if (hasActiveSession(profile.name)) {
+            const indicator = document.createElement('span');
+            indicator.textContent = ' ●';
+            indicator.style.color = '#10b981';  // 绿色圆点
+            indicator.title = t('运行中');
+            item.appendChild(indicator);
+        }
+        
         item.addEventListener('click', () => selectProfile(profile));
         profileListEl.appendChild(item);
     });
@@ -393,12 +452,14 @@ function renderProfileDetail() {
 
 function updateButtonStates() {
     const hasProfile = !!state.selectedProfile;
-    const sessionRunning = !!state.session;
+    // 检查当前选中的 profile 是否有会话运行
+    const sessionRunning = hasProfile && hasActiveSession(state.selectedProfile.name);
     
-    // Disable editing controls during session, enable when session=null
+    // 只有运行会话的 profile 禁用编辑控件
     deleteProfileBtn.disabled = sessionRunning;
     saveBtn.disabled = sessionRunning;
     profileNameEl.disabled = sessionRunning;
+    
     // Viewport inputs: disabled if session running OR fullscreen enabled
     const fullscreenEnabled = state.selectedProfile?.fullscreen || false;
     viewportWidthEl.disabled = sessionRunning || fullscreenEnabled;
@@ -420,9 +481,11 @@ function updateButtonStates() {
     const storageEnabled = state.selectedProfile?.storage_enabled !== undefined ? state.selectedProfile.storage_enabled : true;
     persistentDirEl.disabled = sessionRunning || !storageEnabled;
     
-    newProfileBtn.disabled = sessionRunning;
+    // 当任何会话运行时禁用"新建配置"按钮（可选：也可以允许创建新配置）
+    // 这里我们允许在有会话运行时创建新配置
+    newProfileBtn.disabled = false;
     
-    // Session controls
+    // Session controls - 基于当前 profile 的会话状态
     launchBtn.disabled = !hasProfile || sessionRunning;
     stopBtn.disabled = !sessionRunning;
 }
@@ -439,11 +502,20 @@ function showStatus(message, type = 'info') {
     // Clear after 5 seconds
     setTimeout(() => {
         if (statusMessageEl.textContent === message) {
-            statusMessageEl.textContent = t('就绪');
-            statusMessageEl.className = '';
-            statusMessageEl.style.color = 'var(--text-secondary)';
+            updateStatusMessage();
         }
     }, 5000);
+}
+
+function updateStatusMessage() {
+    const sessionCount = state.sessions.length;
+    if (sessionCount > 0) {
+        statusMessageEl.textContent = `${t('就绪')} (${sessionCount} ${t('个会话运行中')})`;
+    } else {
+        statusMessageEl.textContent = t('就绪');
+    }
+    statusMessageEl.className = '';
+    statusMessageEl.style.color = 'var(--text-secondary)';
 }
 
 // ========== Theme System ==========
